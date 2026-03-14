@@ -1,59 +1,102 @@
-# 🌐 SkillMatch - Yetenek Eşleştirme Sistemi
+# ⚡ SkillMatch v2
 
-Bu proje, iş arayanların sahip olduğu yetenekler ile iş ilanlarında aranan gereksinimleri analiz ederek, kullanıcıya en uygun işleri bir **uygunluk skoru (%)** ile sunan dinamik bir web uygulamasıdır. **Spring Boot** ekosistemi kullanılarak geliştirilen bu sistem, işe alım süreçlerini otomatize etmeyi hedefler.
+Bu proje, Java Spring Boot ile geliştirilmiş, iş arayanları işverenlerle buluşturan bir yetenek eşleştirme platformudur. Kullanıcılar yeteneklerine göre iş ilanlarıyla eşleştirilir ve işverenlerle gerçek zamanlı mesajlaşabilir.
 
+---
 
 ## 🚀 Proje İçeriği
 
-Site içerisinde aşağıdaki temel modüller yer almaktadır:
-
-* **Giriş ve Kayıt Paneli:** Kullanıcıların sisteme dahil olduğu ve sahip oldukları teknik yetenekleri (Java, SQL, Docker vb.) seçtiği alan.
-* **Akıllı Ana Sayfa (Dashboard):** Sisteme giriş yapan kullanıcının yetenek setine göre filtrelenmiş ve skorlanmış iş ilanlarının listelendiği merkez.
-* **Eşleştirme Algoritması:** İş ilanındaki zorunlu yetenekler ile kullanıcı yeteneklerini karşılaştırıp 2 ondalık basamağa kadar hassas hesaplama yapan servis katmanı.
-* **Dinamik Veri Yönetimi:** Uygulama ayağa kalktığında test verilerini (Skill ve JobPosting) otomatik olarak veritabanına işleyen yapı.
+* **Rol Seçimi:** Kullanıcı iş arayan (Seeker) veya işveren (Employer) olarak kayıt olabilir.
+* **İş İlanları:** İşverenler ilan oluşturabilir, iş arayanlar yeteneklerine göre eşleşme yüzdesiyle ilanları görüntüleyebilir.
+* **Başvuru Sistemi:** İş arayanlar tek tıkla ilanlara başvurabilir.
+* **Gerçek Zamanlı Mesajlaşma:** İş arayan ve işveren arasında chat drawer üzerinden mesajlaşma.
+* **Bildirim Sistemi:** Okunmamış mesaj ve yeni başvuru bildirimleri.
+* **İşveren Paneli:** Tüm ilanlar ve başvuran adayların listesi.
 
 ---
 
 ## 🛠️ Kullanılan Teknolojiler
 
-Bu proje **Fullstack** bir yaklaşımla, modern Java teknolojileri üzerine inşa edilmiştir:
-
-* **Backend:** Java 17+, Spring Boot
-* **Veri Yönetimi:** Spring Data JPA (Hibernate), H2 Database (In-Memory)
-* **Frontend:** Thymeleaf (Dinamik HTML şablon motoru), CSS3
-* **Araçlar:** Lombok, Maven
-
----
-
-## 📈 Algoritma Mantığı
-
-Sistem, eşleşme skorunu aşağıdaki formüle dayanarak hesaplar:
-
-$$Score = \left( \frac{\text{Kullanıcıda Bulunan Eşleşen Yetenekler}}{\text{İş İlanındaki Toplam Gerekli Yetenekler}} \right) \times 100$$
-
-*Örnek: Bir ilan 4 yetenek istiyorsa ve kullanıcı bunlardan 3'üne sahipse, uygunluk skoru **%75.0** olarak hesaplanır.*
+* **Java 17+** — Backend dili
+* **Spring Boot 4** — Web framework
+* **Thymeleaf** — Server-side template engine
+* **Spring Data JPA / Hibernate** — ORM ve veritabanı yönetimi
+* **PostgreSQL** — Veritabanı (Docker üzerinde)
+* **Lombok** — Boilerplate kod azaltma
+* **HTML5 / CSS3 / Vanilla JS** — Frontend
 
 ---
 
-## 📸 Uygulama Görselleri
-<p align="center">
-<img width="1389" height="900" alt="Ekran Resmi 2026-03-07 02 06 22" src="https://github.com/user-attachments/assets/9fe0d7f1-9f37-46ac-a569-fb51840d3dbe" />
-<img width="1389" height="900" alt="Ekran Resmi 2026-03-07 02 06 10" src="https://github.com/user-attachments/assets/fc55ac80-d543-458a-bb35-372b65590291" />
-<img width="1389" height="900" alt="Ekran Resmi 2026-03-07 02 05 37" src="https://github.com/user-attachments/assets/f066265e-2ec8-4f90-9727-ec373b49ed6f" />
-</p>
+## ⚙️ Kurulum
+
+### Gereksinimler
+- Java 17+
+- Maven
+- Docker
+
+### 1. Repoyu klonlayın
+
+```bash
+git clone https://github.com/livanurdeli/Skill-Matching-System-v2.git
+cd Skill-Matching-System-v2
+```
+
+### 2. PostgreSQL'i Docker ile başlatın
+
+```bash
+docker run --name skillmatch-db \
+  -e POSTGRES_USER=skillmatch_user \
+  -e POSTGRES_PASSWORD=skillmatch_pass \
+  -e POSTGRES_DB=skillmatch \
+  -p 5433:5432 \
+  -d postgres:15
+```
+
+### 3. `application.properties` ayarları
+
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5433/skillmatch
+spring.datasource.username=skillmatch_user
+spring.datasource.password=skillmatch_pass
+spring.jpa.hibernate.ddl-auto=update
+```
+
+### 4. Uygulamayı başlatın
+
+```bash
+mvn spring-boot:run
+```
+
+Tarayıcıda açın: [http://localhost:8080](http://localhost:8080)
 
 ---
 
-## ⚙️ Kurulum (Yerel Çalıştırma)
+## 👤 Kullanıcı Akışı
 
-Projeyi kendi bilgisayarınızda çalıştırmak isterseniz:
+```
+/role-select
+  ├── Seeker  → /login → /home        (ilan listesi, başvur, mesajlaş)
+  └── Employer → /login → /employer/home  (ilan yönetimi, aday listesi, mesajlaş)
+```
 
-1. **Repoyu Klonlayın:**
-   ```bash
-   git clone [https://github.com/livanurdeli/skillmatch-system.git](https://github.com/livanurdeli/skillmatch-system.git) ```
-   
-2. **Bağımlılıkları Yükleyin:**
-   ```bash
-   mvn clean install
-3. **Tarayıcıdan Erişin:**
-   URL: http://localhost:8080/login
+---
+
+## 📁 Proje Yapısı
+
+```
+src/main/java/com/demo/skillmatch/
+├── controller/   → AuthController, HomeController, EmployerController, ChatController
+├── model/        → User, JobPosting, Application, Message, Skill
+├── repository/   → JPA Repository arayüzleri
+├── service/      → İş mantığı servisleri
+└── config/       → Uygulama konfigürasyonları
+
+src/main/resources/templates/
+├── role-select.html
+├── login.html
+├── register-seeker.html
+├── register-employer.html
+├── home.html
+├── employer-home.html
+└── employer-job-form.html
+```
