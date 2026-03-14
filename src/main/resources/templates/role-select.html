@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="tr">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>SkillMatch - Rol Seçimi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@300;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            min-height: 100vh;
+            background: #080c14;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'DM Sans', Arial, sans-serif;
+            padding: 2rem 1rem;
+        }
+
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background:
+                radial-gradient(ellipse 60% 50% at 15% 20%, rgba(94,234,212,0.06) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 85% 80%, rgba(125,211,252,0.06) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        body::after {
+            content: '';
+            position: fixed; inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
+            background-size: 72px 72px;
+            pointer-events: none;
+        }
+
+        .wrapper {
+            position: relative; z-index: 10;
+            width: 100%; max-width: 860px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 100px;
+            padding: 5px 18px 5px 8px;
+            margin-bottom: 2.5rem;
+        }
+        .badge-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: #5EEAD4; box-shadow: 0 0 8px #5EEAD4;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        .badge span {
+            font-size: 11px; letter-spacing: 2.5px;
+            text-transform: uppercase; color: rgba(255,255,255,0.45); font-weight: 500;
+        }
+
+        /* Headline */
+        .headline { text-align: center; margin-bottom: 3rem; }
+        .headline h1 {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(1.8rem, 4.5vw, 3rem);
+            font-weight: 300; color: #fff;
+            line-height: 1.2; letter-spacing: -1px; margin-bottom: 10px;
+        }
+        .headline h1 strong {
+            font-weight: 700;
+            background: linear-gradient(135deg, #5EEAD4, #7DD3FC);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .headline p { color: rgba(255,255,255,0.38); font-size: 15px; font-weight: 300; }
+
+        /* Cards */
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.25rem; width: 100%; margin-bottom: 2.5rem;
+        }
+
+        .card {
+            position: relative;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px; padding: 2.25rem;
+            cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+            overflow: hidden;
+        }
+        .card::before {
+            content: ''; position: absolute; inset: 0; border-radius: 20px;
+            opacity: 0; transition: opacity 0.35s;
+        }
+        .card--green::before { background: rgba(94,234,212,0.08); }
+        .card--blue::before  { background: rgba(125,211,252,0.08); }
+
+        .card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.14); }
+        .card:hover::before { opacity: 1; }
+
+        .card.selected { transform: translateY(-6px) scale(1.01); }
+        .card--green.selected {
+            border-color: rgba(94,234,212,0.4);
+            box-shadow: 0 24px 64px rgba(94,234,212,0.12), 0 0 0 1px rgba(94,234,212,0.15);
+        }
+        .card--blue.selected {
+            border-color: rgba(125,211,252,0.4);
+            box-shadow: 0 24px 64px rgba(125,211,252,0.12), 0 0 0 1px rgba(125,211,252,0.15);
+        }
+        .card.selected::before { opacity: 1; }
+
+        .card-check {
+            position: absolute; top: 16px; right: 16px;
+            width: 24px; height: 24px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 700;
+            opacity: 0; transform: scale(0.5);
+            transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .card--green .card-check { background: #5EEAD4; color: #052e26; }
+        .card--blue  .card-check { background: #7DD3FC; color: #082f49; }
+        .card.selected .card-check { opacity: 1; transform: scale(1); }
+
+        .card-icon {
+            width: 56px; height: 56px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px; margin-bottom: 1.5rem;
+            transition: transform 0.3s; position: relative; z-index: 1;
+        }
+        .card--green .card-icon { background: rgba(94,234,212,0.1); border: 1px solid rgba(94,234,212,0.2); }
+        .card--blue  .card-icon { background: rgba(125,211,252,0.1); border: 1px solid rgba(125,211,252,0.2); }
+        .card:hover .card-icon, .card.selected .card-icon { transform: scale(1.1) rotate(-3deg); }
+
+        .card-sub {
+            font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+            font-weight: 500; margin-bottom: 6px; position: relative; z-index: 1;
+        }
+        .card--green .card-sub { color: #5EEAD4; }
+        .card--blue  .card-sub { color: #7DD3FC; }
+
+        .card h2 {
+            font-family: 'Fraunces', serif;
+            font-size: 1.5rem; font-weight: 600; color: #fff;
+            letter-spacing: -0.5px; margin-bottom: 10px; position: relative; z-index: 1;
+        }
+        .card p {
+            font-size: 14px; color: rgba(255,255,255,0.4);
+            line-height: 1.65; font-weight: 300; margin-bottom: 1.5rem; position: relative; z-index: 1;
+        }
+
+        .features { display: flex; flex-direction: column; gap: 7px; position: relative; z-index: 1; }
+        .feature {
+            display: flex; align-items: center; gap: 9px;
+            font-size: 13px; color: rgba(255,255,255,0.3); font-weight: 300;
+            transition: color 0.3s;
+        }
+        .card:hover .feature, .card.selected .feature { color: rgba(255,255,255,0.6); }
+        .feature-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+        .card--green .feature-dot { background: #5EEAD4; }
+        .card--blue  .feature-dot { background: #7DD3FC; }
+
+        /* CTA */
+        .cta-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+
+        .cta-btn {
+            padding: 15px 56px; border-radius: 100px; border: none;
+            font-size: 15px; font-weight: 600; font-family: 'DM Sans', sans-serif;
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+        }
+        .cta-btn:disabled {
+            background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.18);
+            cursor: not-allowed;
+        }
+        .cta-btn:not(:disabled) {
+            background: linear-gradient(135deg, rgba(94,234,212,0.9), rgba(125,211,252,0.9));
+            color: #071a2e;
+            box-shadow: 0 8px 32px rgba(94,234,212,0.2);
+        }
+        .cta-btn:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 48px rgba(94,234,212,0.3);
+        }
+
+        .cta-hint { font-size: 11.5px; color: rgba(255,255,255,0.2); }
+
+        .login-link { margin-top: 2rem; font-size: 13.5px; color: rgba(255,255,255,0.28); }
+        .login-link a { color: #5EEAD4; text-decoration: none; font-weight: 500; }
+        .login-link a:hover { opacity: 0.7; }
+
+        /* Fade-in */
+        .wrapper > * { opacity: 0; transform: translateY(16px); animation: fadeUp 0.55s ease forwards; }
+        .badge      { animation-delay: 0.05s; }
+        .headline   { animation-delay: 0.12s; }
+        .cards      { animation-delay: 0.20s; }
+        .cta-wrap   { animation-delay: 0.30s; }
+        .login-link { animation-delay: 0.36s; }
+        @keyframes fadeUp { to { opacity:1; transform:translateY(0); } }
+
+        @media (max-width: 640px) { .cards { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+
+    <div class="badge">
+        <div class="badge-dot"></div>
+        <span>SkillMatch v2.0</span>
+    </div>
+
+    <div class="headline">
+        <h1>Platforma nasıl<br/><strong>katılmak istiyorsunuz?</strong></h1>
+        <p>Rolünüzü seçin, deneyiminiz buna göre şekillensin.</p>
+    </div>
+
+    <div class="cards">
+
+        <!-- İş Arayan -->
+        <div class="card card--green" id="card-seeker" onclick="selectRole('seeker', this)">
+            <div class="card-check">✓</div>
+            <div class="card-icon">🎯</div>
+            <div class="card-sub">Job Seeker</div>
+            <h2>İş Arıyorum</h2>
+            <p>Yeteneklerimi listeleyin, bana en uygun pozisyonları bulun.</p>
+            <div class="features">
+                <div class="feature"><div class="feature-dot"></div> Yetenek eşleştirme skoru</div>
+                <div class="feature"><div class="feature-dot"></div> Kişiselleştirilmiş ilanlar</div>
+                <div class="feature"><div class="feature-dot"></div> Anlık eşleşme bildirimleri</div>
+            </div>
+        </div>
+
+        <!-- İş Veren -->
+        <div class="card card--blue" id="card-employer" onclick="selectRole('employer', this)">
+            <div class="card-check">✓</div>
+            <div class="card-icon">🏢</div>
+            <div class="card-sub">Employer</div>
+            <h2>Eleman Arıyorum</h2>
+            <p>İlan oluşturun, en uygun adayları otomatik olarak keşfedin.</p>
+            <div class="features">
+                <div class="feature"><div class="feature-dot"></div> Aday havuzu analizi</div>
+                <div class="feature"><div class="feature-dot"></div> Yetenek bazlı filtreleme</div>
+                <div class="feature"><div class="feature-dot"></div> Başvuru yönetimi</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="cta-wrap">
+        <!--
+            Thymeleaf controller'ında:
+            @GetMapping("/role-select")
+            public String roleSelect() { return "role-select"; }
+
+            Seçilen rol /login?role=seeker veya /login?role=employer adresine yönlendirir.
+            Spring Security login sayfanızda bu parametreyi okuyabilirsiniz.
+        -->
+        <button class="cta-btn" id="cta-btn" disabled onclick="goToLogin()">
+            Bir rol seçin
+        </button>
+        <span class="cta-hint" id="cta-hint" style="visibility:hidden">
+            Daha sonra ayarlardan değiştirebilirsiniz
+        </span>
+    </div>
+
+    <div class="login-link">
+        Zaten hesabın var mı? <a th:href="@{/login}">Giriş yap</a>
+    </div>
+
+</div>
+
+<script>
+    let selectedRole = null;
+
+    function selectRole(role, el) {
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedRole = role;
+
+        const btn = document.getElementById('cta-btn');
+        btn.disabled = false;
+        btn.textContent = role === 'seeker'
+            ? 'İş Arayan olarak devam et →'
+            : 'İşveren olarak devam et →';
+
+        document.getElementById('cta-hint').style.visibility = 'visible';
+    }
+
+    function goToLogin() {
+        if (selectedRole) {
+            window.location.href = '/login?role=' + selectedRole;
+        }
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="tr">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>SkillMatch - Yeni İlan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@300;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            min-height: 100vh; background: #080c14;
+            font-family: 'DM Sans', Arial, sans-serif; color: #f0f4f8;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 2.5rem 1rem;
+        }
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background: radial-gradient(ellipse 55% 45% at 15% 20%, rgba(125,211,252,0.06) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        body::after {
+            content: ''; position: fixed; inset: 0;
+            background-image: linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+            background-size: 72px 72px; pointer-events: none;
+        }
+
+        .page-wrap { position: relative; z-index: 10; width: 100%; max-width: 560px; }
+
+        .page-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 2rem;
+            opacity: 0; animation: fadeUp 0.5s ease 0.05s forwards;
+        }
+        .logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+        .logo-icon { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(135deg, #7DD3FC, #818CF8); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .logo-text { font-family: 'Fraunces', serif; font-size: 1.1rem; font-weight: 600; color: #fff; }
+        .back-link { font-size: 13px; color: rgba(255,255,255,0.35); text-decoration: none; transition: color 0.2s; }
+        .back-link:hover { color: rgba(255,255,255,0.7); }
+
+        .card {
+            background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 22px; overflow: hidden;
+            opacity: 0; animation: fadeUp 0.55s ease 0.12s forwards;
+        }
+        .card-header { padding: 2rem 2.25rem 0; }
+        .role-tag {
+            display: inline-flex; align-items: center; gap: 7px;
+            background: rgba(125,211,252,0.08); border: 1px solid rgba(125,211,252,0.2);
+            border-radius: 100px; padding: 4px 12px 4px 8px; margin-bottom: 1rem;
+        }
+        .role-tag-dot { width: 5px; height: 5px; border-radius: 50%; background: #7DD3FC; }
+        .role-tag span { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #7DD3FC; font-weight: 500; }
+        .card-header h1 { font-family: 'Fraunces', serif; font-size: 1.7rem; font-weight: 600; color: #fff; letter-spacing: -0.5px; margin-bottom: 6px; }
+        .card-header p { font-size: 13.5px; color: rgba(255,255,255,0.38); font-weight: 300; }
+        .progress-bar { height: 2px; background: rgba(255,255,255,0.05); margin-top: 1.75rem; overflow: hidden; }
+        .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #7DD3FC, #818CF8); transition: width 0.4s ease; }
+
+        .card-body { padding: 2rem 2.25rem 2.25rem; }
+
+        .error {
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2);
+            border-radius: 10px; padding: 11px 14px; margin-bottom: 1.5rem;
+            font-size: 13.5px; color: #fca5a5; font-weight: 300;
+        }
+        .error::before { content: '⚠'; }
+
+        form { display: flex; flex-direction: column; gap: 1rem; }
+
+        .section-title { font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(255,255,255,0.35); font-weight: 500; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.06); margin-top: 0.5rem; }
+
+        .field { display: flex; flex-direction: column; gap: 5px; }
+        .field label { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.45); letter-spacing: 0.5px; text-transform: uppercase; }
+        .input-wrap { position: relative; display: flex; align-items: center; }
+        .input-icon { position: absolute; left: 13px; font-size: 15px; color: rgba(255,255,255,0.22); pointer-events: none; transition: color 0.25s; }
+
+        input[type="text"], textarea {
+            width: 100%; padding: 12px 12px 12px 40px;
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 11px; color: #f0f4f8; font-size: 14px;
+            font-family: 'DM Sans', Arial, sans-serif; font-weight: 300;
+            outline: none; transition: all 0.25s;
+        }
+        textarea { padding: 12px 12px 12px 40px; resize: vertical; min-height: 90px; line-height: 1.6; }
+        input:focus, textarea:focus {
+            border-color: rgba(125,211,252,0.45); background: rgba(255,255,255,0.05);
+            box-shadow: 0 0 0 3px rgba(125,211,252,0.06);
+        }
+        .input-wrap:focus-within .input-icon { color: #7DD3FC; }
+        input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.16); }
+        .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+        /* Skills */
+        .skills-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 7px; max-height: 200px; overflow-y: auto; padding-right: 4px;
+        }
+        .skills-grid::-webkit-scrollbar { width: 4px; }
+        .skills-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        .skill-item {
+            display: flex; align-items: center; gap: 8px; padding: 9px 11px;
+            border: 1px solid rgba(255,255,255,0.07); border-radius: 9px;
+            cursor: pointer; transition: all 0.22s; background: rgba(255,255,255,0.02); user-select: none;
+        }
+        .skill-item:hover { border-color: rgba(125,211,252,0.3); background: rgba(125,211,252,0.05); }
+        .skill-item input[type="checkbox"] { display: none; }
+        .skill-box {
+            width: 15px; height: 15px; border-radius: 4px; flex-shrink: 0;
+            border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.03);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 9px; color: #7DD3FC; font-weight: 700; transition: all 0.2s;
+        }
+        .skill-item.checked .skill-box { background: rgba(125,211,252,0.15); border-color: #7DD3FC; }
+        .skill-item.checked { border-color: rgba(125,211,252,0.35); background: rgba(125,211,252,0.06); }
+        .skill-name { font-size: 12.5px; color: rgba(255,255,255,0.45); transition: color 0.2s; }
+        .skill-item.checked .skill-name { color: rgba(255,255,255,0.85); }
+
+        button[type="submit"] {
+            width: 100%; padding: 14px; border-radius: 11px; border: none;
+            font-size: 15px; font-weight: 600; font-family: 'DM Sans', Arial, sans-serif;
+            cursor: pointer; margin-top: 0.5rem;
+            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+            background: linear-gradient(135deg, #7DD3FC, #818CF8);
+            color: #071a2e; box-shadow: 0 8px 24px rgba(125,211,252,0.18);
+        }
+        button[type="submit"]:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(125,211,252,0.28); }
+
+        @keyframes fadeUp { to { opacity:1; transform:translateY(0); } }
+        @media (max-width: 500px) { .field-row { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="page-wrap">
+
+    <div class="page-header">
+        <a th:href="@{/}" class="logo">
+            <div class="logo-icon">⚡</div>
+            <span class="logo-text">SkillMatch</span>
+        </a>
+        <a th:href="@{/employer/home}" class="back-link">← Panele Dön</a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="role-tag"><div class="role-tag-dot"></div><span>Yeni İlan</span></div>
+            <h1>İlan Oluştur</h1>
+            <p>Pozisyonu tanımlayın, algoritma en uygun adayları bulsun.</p>
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+        </div>
+
+        <div class="card-body">
+            <div class="error" th:if="${error}" th:text="${error}"></div>
+
+            <form method="post" th:action="@{/employer/job/new}">
+
+                <div class="section-title">Pozisyon Bilgileri</div>
+
+                <div class="field">
+                    <label for="title">Pozisyon Adı</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">💼</span>
+                        <input type="text" id="title" name="title" placeholder="ör. Senior Backend Developer" required/>
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <div class="field">
+                        <label for="company">Şirket Adı</label>
+                        <div class="input-wrap">
+                            <span class="input-icon">🏢</span>
+                            <input type="text" id="company" name="company" placeholder="Şirket Adı" required/>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="location">Lokasyon</label>
+                        <div class="input-wrap">
+                            <span class="input-icon">📍</span>
+                            <input type="text" id="location" name="location" placeholder="İstanbul / Uzak" required/>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="description">İlan Açıklaması</label>
+                    <div class="input-wrap">
+                        <span class="input-icon" style="top:13px; align-self:flex-start; position:absolute;">📝</span>
+                        <textarea id="description" name="description" placeholder="Pozisyonu ve beklentilerinizi açıklayın..."></textarea>
+                    </div>
+                </div>
+
+                <div class="section-title">Aranan Yetenekler</div>
+
+                <!-- Mevcut th:each + name="skillIds" yapısı korundu -->
+                <div class="skills-grid">
+                    <label class="skill-item"
+                           th:each="skill : ${skills}"
+                           th:data-name="${skill.name}"
+                           onclick="toggleSkill(this)">
+                        <input type="checkbox" name="skillIds" th:value="${skill.id}"/>
+                        <div class="skill-box"></div>
+                        <span class="skill-name" th:text="${skill.name}">Yetenek</span>
+                    </label>
+                </div>
+
+                <button type="submit">İlanı Yayınla →</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleSkill(label) {
+        const cb = label.querySelector('input[type="checkbox"]');
+        cb.checked = !cb.checked;
+        label.classList.toggle('checked', cb.checked);
+        updateProgress();
+    }
+
+    function updateProgress() {
+        const fields = ['title', 'company', 'location'];
+        const filled = fields.filter(id => document.getElementById(id)?.value?.trim()).length;
+        const skills = document.querySelectorAll('.skill-item.checked').length;
+        const pct    = (filled / fields.length) * 60 + Math.min(skills / 3, 1) * 40;
+        document.getElementById('progress-fill').style.width = pct + '%';
+    }
+
+    ['title','company','location','description'].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', updateProgress);
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="tr">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>SkillMatch - İşveren Kaydı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@300;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            min-height: 100vh;
+            background: #080c14;
+            display: flex; align-items: flex-start; justify-content: center;
+            font-family: 'DM Sans', Arial, sans-serif;
+            padding: 3rem 1rem;
+        }
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background:
+                radial-gradient(ellipse 55% 45% at 10% 15%, rgba(125,211,252,0.07) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 55% at 90% 85%, rgba(129,140,248,0.05) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        body::after {
+            content: ''; position: fixed; inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 72px 72px;
+            pointer-events: none;
+        }
+
+        .page-wrap {
+            position: relative; z-index: 10;
+            width: 100%; max-width: 580px;
+            display: flex; flex-direction: column;
+        }
+
+        /* ── Header ── */
+        .page-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 2rem;
+            opacity: 0; transform: translateY(12px);
+            animation: fadeUp 0.5s ease 0.05s forwards;
+        }
+        .logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+        .logo-icon {
+            width: 32px; height: 32px; border-radius: 9px;
+            background: linear-gradient(135deg, #7DD3FC, #818CF8);
+            display: flex; align-items: center; justify-content: center; font-size: 16px;
+        }
+        .logo-text { font-family: 'Fraunces', serif; font-size: 1.1rem; font-weight: 600; color: #fff; }
+
+        .step-indicator {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 12px; color: rgba(255,255,255,0.3);
+        }
+        .step-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.15); }
+        .step-dot.active { background: #7DD3FC; box-shadow: 0 0 6px #7DD3FC; }
+
+        /* ── Card ── */
+        .card {
+            background: rgba(255,255,255,0.025);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 22px; overflow: hidden;
+            opacity: 0; transform: translateY(16px);
+            animation: fadeUp 0.55s ease 0.12s forwards;
+        }
+
+        .card-header { padding: 2.25rem 2.25rem 0; }
+
+        .role-tag {
+            display: inline-flex; align-items: center; gap: 7px;
+            background: rgba(125,211,252,0.08);
+            border: 1px solid rgba(125,211,252,0.2);
+            border-radius: 100px; padding: 4px 12px 4px 8px; margin-bottom: 1rem;
+        }
+        .role-tag-dot { width: 5px; height: 5px; border-radius: 50%; background: #7DD3FC; }
+        .role-tag span { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #7DD3FC; font-weight: 500; }
+
+        .card-header h1 {
+            font-family: 'Fraunces', serif;
+            font-size: 1.8rem; font-weight: 600; color: #fff;
+            letter-spacing: -0.5px; margin-bottom: 6px;
+        }
+        .card-header p { font-size: 13.5px; color: rgba(255,255,255,0.38); font-weight: 300; }
+
+        .progress-bar { height: 2px; background: rgba(255,255,255,0.05); margin-top: 1.75rem; overflow: hidden; }
+        .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #7DD3FC, #818CF8); transition: width 0.4s ease; }
+
+        /* ── Form body ── */
+        .card-body { padding: 2rem 2.25rem 2.25rem; }
+
+        .error {
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2);
+            border-radius: 10px; padding: 11px 14px; margin-bottom: 1.5rem;
+            font-size: 13.5px; color: #fca5a5; font-weight: 300;
+        }
+        .error::before { content: '⚠'; }
+
+        form { display: flex; flex-direction: column; gap: 1rem; }
+
+        .section-title {
+            font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase;
+            color: rgba(255,255,255,0.35); font-weight: 500;
+            padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.06);
+            margin-top: 0.5rem;
+        }
+
+        .field { display: flex; flex-direction: column; gap: 5px; }
+        .field label { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.45); letter-spacing: 0.5px; text-transform: uppercase; }
+
+        .input-wrap { position: relative; display: flex; align-items: center; }
+        .input-icon { position: absolute; left: 13px; font-size: 15px; color: rgba(255,255,255,0.22); pointer-events: none; transition: color 0.25s; }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="url"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px 12px 12px 40px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 11px;
+            color: #f0f4f8; font-size: 14px;
+            font-family: 'DM Sans', Arial, sans-serif; font-weight: 300;
+            outline: none; transition: all 0.25s;
+        }
+        select { padding-left: 40px; cursor: pointer; appearance: none; }
+        select option { background: #0f1a2e; color: #f0f4f8; }
+        textarea { padding: 12px 12px 12px 40px; resize: vertical; min-height: 90px; line-height: 1.6; }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: rgba(125,211,252,0.45);
+            background: rgba(255,255,255,0.05);
+            box-shadow: 0 0 0 3px rgba(125,211,252,0.06);
+        }
+        .input-wrap:focus-within .input-icon { color: #7DD3FC; }
+        input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.16); }
+
+        /* Select arrow */
+        .select-wrap::after {
+            content: '▾'; position: absolute; right: 13px;
+            color: rgba(255,255,255,0.3); font-size: 13px; pointer-events: none;
+        }
+
+        .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+        /* ── Required skills mini-grid ── */
+        .skills-label {
+            font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.45);
+            letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 5px;
+        }
+        .skills-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 7px; max-height: 180px; overflow-y: auto; padding-right: 4px;
+        }
+        .skills-grid::-webkit-scrollbar { width: 4px; }
+        .skills-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+        .skill-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 9px 11px;
+            border: 1px solid rgba(255,255,255,0.07); border-radius: 9px;
+            cursor: pointer; transition: all 0.22s;
+            background: rgba(255,255,255,0.02);
+            user-select: none;
+        }
+        .skill-item:hover { border-color: rgba(125,211,252,0.3); background: rgba(125,211,252,0.05); }
+        .skill-item input[type="checkbox"] { display: none; }
+        .skill-box {
+            width: 15px; height: 15px; border-radius: 4px; flex-shrink: 0;
+            border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.03);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 9px; color: #7DD3FC; font-weight: 700; transition: all 0.2s;
+        }
+        .skill-item.checked .skill-box { background: rgba(125,211,252,0.15); border-color: #7DD3FC; }
+        .skill-item.checked { border-color: rgba(125,211,252,0.35); background: rgba(125,211,252,0.06); }
+        .skill-name { font-size: 12.5px; color: rgba(255,255,255,0.45); transition: color 0.2s; }
+        .skill-item.checked .skill-name { color: rgba(255,255,255,0.85); }
+
+        /* ── Terms ── */
+        .terms-check {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 14px; border-radius: 10px;
+            background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07);
+            cursor: pointer;
+        }
+        .terms-check input[type="checkbox"] { display: none; }
+        .check-box {
+            width: 18px; height: 18px; min-width: 18px; border-radius: 5px;
+            border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.03);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; color: #7DD3FC; transition: all 0.2s; margin-top: 1px;
+        }
+        .terms-check.checked .check-box { background: rgba(125,211,252,0.15); border-color: #7DD3FC; }
+        .terms-text { font-size: 13px; color: rgba(255,255,255,0.38); line-height: 1.5; font-weight: 300; }
+        .terms-text a { color: #7DD3FC; text-decoration: none; }
+
+        /* Submit */
+        button[type="submit"] {
+            width: 100%; padding: 14px; border-radius: 11px; border: none;
+            font-size: 15px; font-weight: 600; font-family: 'DM Sans', Arial, sans-serif;
+            cursor: pointer; margin-top: 0.5rem;
+            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+            background: linear-gradient(135deg, #7DD3FC, #818CF8);
+            color: #071a2e;
+            box-shadow: 0 8px 24px rgba(125,211,252,0.18);
+        }
+        button[type="submit"]:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(125,211,252,0.28); }
+        button[type="submit"]:active { transform: translateY(0); }
+
+        .login-hint {
+            text-align: center; margin-top: 1.5rem;
+            font-size: 13.5px; color: rgba(255,255,255,0.28); font-weight: 300;
+            opacity: 0; transform: translateY(8px);
+            animation: fadeUp 0.5s ease 0.3s forwards;
+        }
+        .login-hint a { color: #7DD3FC; text-decoration: none; font-weight: 500; }
+        .login-hint a:hover { opacity: 0.65; }
+
+        @keyframes fadeUp { to { opacity:1; transform:translateY(0); } }
+
+        @media (max-width: 500px) {
+            .field-row { grid-template-columns: 1fr; }
+            .card-header, .card-body { padding-left: 1.5rem; padding-right: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+    <div class="page-header">
+        <a th:href="@{/}" class="logo">
+            <div class="logo-icon">⚡</div>
+            <span class="logo-text">SkillMatch</span>
+        </a>
+        <div class="step-indicator">
+            <div class="step-dot active"></div>
+            <div class="step-dot active"></div>
+            <div class="step-dot"></div>
+            Şirket kaydı
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="role-tag">
+                <div class="role-tag-dot"></div>
+                <span>Employer</span>
+            </div>
+            <h1>Şirketini kaydet</h1>
+            <p>Birkaç adımda ilanınızı yayınlayın, adaylar gelsin.</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+
+        <div class="card-body">
+
+            <div class="error" th:if="${error}" th:text="${error}"></div>
+
+            <!--
+                Backend için öneri:
+                @PostMapping("/register/employer")
+                public String registerEmployer(@ModelAttribute EmployerRegisterDto dto, ...) { ... }
+            -->
+            <form method="post" th:action="@{/register/employer}" id="empForm">
+
+                <div class="section-title">Hesap Bilgileri</div>
+
+                <div class="field">
+                    <label for="name">Ad Soyad (Yetkili)</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">👤</span>
+                        <input type="text" id="name" name="name" placeholder="Adınız Soyadınız" required/>
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <div class="field">
+                        <label for="email">İş E-postası</label>
+                        <div class="input-wrap">
+                            <span class="input-icon">✉</span>
+                            <input type="email" id="email" name="email" placeholder="siz@sirket.com" required/>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="password">Şifre</label>
+                        <div class="input-wrap">
+                            <span class="input-icon">🔒</span>
+                            <input type="password" id="password" name="password" placeholder="••••••••" required/>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-title">Şirket Bilgileri</div>
+
+                <div class="field">
+                    <label for="companyName">Şirket Adı</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">🏢</span>
+                        <input type="text" id="companyName" name="companyName" placeholder="Şirket Adı A.Ş." required/>
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <div class="field">
+                        <label for="sector">Sektör</label>
+                        <div class="input-wrap select-wrap">
+                            <span class="input-icon">🏭</span>
+                            <select id="sector" name="sector" required>
+                                <option value="" disabled selected>Seçiniz</option>
+                                <option>Yazılım & Teknoloji</option>
+                                <option>Finans & Bankacılık</option>
+                                <option>E-ticaret</option>
+                                <option>Sağlık</option>
+                                <option>Eğitim</option>
+                                <option>Lojistik</option>
+                                <option>Oyun</option>
+                                <option>Diğer</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="companySize">Çalışan Sayısı</label>
+                        <div class="input-wrap select-wrap">
+                            <span class="input-icon">👥</span>
+                            <select id="companySize" name="companySize">
+                                <option value="" disabled selected>Seçiniz</option>
+                                <option>1-10</option>
+                                <option>11-50</option>
+                                <option>51-200</option>
+                                <option>201-1000</option>
+                                <option>1000+</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="website">Web Sitesi (opsiyonel)</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">🌐</span>
+                        <input type="url" id="website" name="website" placeholder="https://www.sirketiniz.com"/>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="description">Şirket Hakkında (opsiyonel)</label>
+                    <div class="input-wrap">
+                        <span class="input-icon" style="top:14px; align-self:flex-start; position:absolute;">📝</span>
+                        <textarea id="description" name="description" placeholder="Şirketinizi kısaca tanıtın..."></textarea>
+                    </div>
+                </div>
+
+                <div class="section-title">Aradığınız Yetenekler</div>
+
+                <!--
+                    Mevcut th:each, name="skillIds", th:value="${skill.id}" korundu.
+                    İşverenin hangi skill'lerde eleman aradığını seçmesi için kullanılır.
+                -->
+                <div>
+                    <div class="skills-label">Pozisyonlarda arayacağınız yetenekleri işaretleyin</div>
+                    <div class="skills-grid">
+                        <label class="skill-item"
+                               th:each="skill : ${skills}"
+                               th:data-name="${skill.name}"
+                               onclick="toggleSkill(this)">
+                            <input type="checkbox" name="skillIds" th:value="${skill.id}"/>
+                            <div class="skill-box"></div>
+                            <span class="skill-name" th:text="${skill.name}">Yetenek</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Terms -->
+                <label class="terms-check" id="terms-label" onclick="toggleTerms()">
+                    <input type="checkbox" name="terms" id="terms-cb" required/>
+                    <div class="check-box" id="terms-box"></div>
+                    <span class="terms-text">
+                        <a href="#">Kullanım koşullarını</a> ve
+                        <a href="#">gizlilik politikasını</a> okudum, kabul ediyorum.
+                    </span>
+                </label>
+
+                <button type="submit">Şirketi Kaydet →</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="login-hint">
+        Zaten hesabın var mı? <a th:href="@{/login?role=employer}">Giriş Yap</a>
+    </div>
+
+</div>
+
+<script>
+    function toggleSkill(label) {
+        const cb = label.querySelector('input[type="checkbox"]');
+        cb.checked = !cb.checked;
+        label.classList.toggle('checked', cb.checked);
+        updateProgress();
+    }
+
+    function toggleTerms() {
+        const cb = document.getElementById('terms-cb');
+        setTimeout(() => {
+            document.getElementById('terms-label').classList.toggle('checked', cb.checked);
+            document.getElementById('terms-box').textContent = cb.checked ? '✓' : '';
+            updateProgress();
+        }, 0);
+    }
+
+    function updateProgress() {
+        const fields = ['name','email','password','companyName','sector'];
+        const filled = fields.filter(id => document.getElementById(id)?.value?.trim()).length;
+        const terms  = document.getElementById('terms-cb').checked ? 1 : 0;
+        const pct    = ((filled + terms) / (fields.length + 1)) * 100;
+        document.getElementById('progress-fill').style.width = pct + '%';
+    }
+
+    ['name','email','password','companyName','sector','companySize'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', updateProgress);
+        document.getElementById(id)?.addEventListener('input', updateProgress);
+    });
+</script>
+</body>
+</html>
