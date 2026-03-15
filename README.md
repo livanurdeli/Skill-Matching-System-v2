@@ -100,3 +100,8 @@ src/main/resources/templates/
 ├── employer-home.html
 └── employer-job-form.html
 ```
+
+
+## 📸 Uygulama Görselleri
+
+
